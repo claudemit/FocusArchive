@@ -53,3 +53,4 @@ input[type=range]::-webkit-slider-thumb{width:14px;height:14px;margin-top:-2.5px
 @media(min-width:1081px){.parameter-grid{grid-template-columns:1fr;grid-row-gap:9px}.parameter-grid label{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;align-items:center;grid-column-gap:6px;margin:0}.parameter-grid label input[type=range]{grid-column:2;grid-row:1;margin:0;height:28px}.parameter-grid label output{grid-column:3;grid-row:1;float:none;text-align:right}}
 @media(min-width:431px) and (max-width:1080px){header{padding-right:132px}}
 @media(min-width:1081px){header>#reset,header .header-command{width:136px;min-width:136px}}
+dialog #close,dialog #close:hover,dialog #close:active,dialog #close:focus{border:0;background:transparent;box-shadow:none;outline:0}
