@@ -1,0 +1,509 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://focus-archive.local/schema/editor-state-v1.json",
+  "title": "Focus Archive EditorState V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "document", "ui", "runtime"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "document": {
+      "$ref": "#/$defs/editorDocument"
+    },
+    "ui": {
+      "$ref": "#/$defs/editorUIState"
+    },
+    "runtime": {
+      "$ref": "#/$defs/editorRuntimeState"
+    }
+  },
+  "$defs": {
+    "imageMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetId",
+        "mediaType",
+        "sourceWidth",
+        "sourceHeight",
+        "workingWidth",
+        "workingHeight",
+        "downsampled"
+      ],
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "mediaType": {
+          "enum": ["image/jpeg", "image/png", "image/webp"]
+        },
+        "sourceWidth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8192
+        },
+        "sourceHeight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8192
+        },
+        "workingWidth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "workingHeight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "downsampled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "adjustments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contrast", "exposure", "hue", "saturation"],
+      "properties": {
+        "contrast": {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 100
+        },
+        "exposure": {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 100
+        },
+        "hue": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "saturation": {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 100
+        }
+      }
+    },
+    "rectRegion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "x", "y", "width", "height"],
+      "properties": {
+        "type": {
+          "const": "rect"
+        },
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "circleRegion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "cx", "cy", "r"],
+      "properties": {
+        "type": {
+          "const": "circle"
+        },
+        "cx": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "cy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "r": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 0.5
+        }
+      }
+    },
+    "focusTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scale", "rotation", "flipX", "panX", "panY"],
+      "properties": {
+        "scale": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "rotation": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "flipX": {
+          "type": "boolean"
+        },
+        "panX": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "panY": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        }
+      }
+    },
+    "focusBorder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["style", "color", "width"],
+      "properties": {
+        "style": {
+          "enum": ["solid", "dashed", "none"]
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        }
+      }
+    },
+    "focusSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["region", "transform", "adjustments", "border"],
+      "properties": {
+        "region": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/rectRegion"
+            },
+            {
+              "$ref": "#/$defs/circleRegion"
+            }
+          ]
+        },
+        "transform": {
+          "$ref": "#/$defs/focusTransform"
+        },
+        "adjustments": {
+          "$ref": "#/$defs/adjustments"
+        },
+        "border": {
+          "$ref": "#/$defs/focusBorder"
+        }
+      }
+    },
+    "typographyItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "token", "x", "y", "fontSize", "rotation", "opacity"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "token": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "fontSize": {
+          "type": "number",
+          "minimum": 12,
+          "maximum": 96
+        },
+        "rotation": {
+          "type": "number",
+          "minimum": -45,
+          "maximum": 45
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 1
+        }
+      }
+    },
+    "typographySettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceText",
+        "splitMode",
+        "itemCount",
+        "fontPreset",
+        "minFontSize",
+        "maxFontSize",
+        "bracketStyle",
+        "rotationRange",
+        "opacityRange",
+        "avoidFocus",
+        "avoidancePadding",
+        "seed",
+        "items"
+      ],
+      "properties": {
+        "sourceText": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "splitMode": {
+          "enum": ["auto", "words", "characters"]
+        },
+        "itemCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "fontPreset": {
+          "enum": ["system-sans", "system-serif", "system-mono"]
+        },
+        "minFontSize": {
+          "type": "number",
+          "minimum": 12,
+          "maximum": 96
+        },
+        "maxFontSize": {
+          "type": "number",
+          "minimum": 12,
+          "maximum": 96
+        },
+        "bracketStyle": {
+          "enum": ["parentheses", "corner", "curly"]
+        },
+        "rotationRange": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 45
+        },
+        "opacityRange": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number",
+              "minimum": 0.3,
+              "maximum": 1
+            },
+            {
+              "type": "number",
+              "minimum": 0.3,
+              "maximum": 1
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "avoidFocus": {
+          "type": "boolean"
+        },
+        "avoidancePadding": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/typographyItem"
+          }
+        }
+      }
+    },
+    "exportSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "jpegQuality"],
+      "properties": {
+        "format": {
+          "enum": ["image/png", "image/jpeg"]
+        },
+        "jpegQuality": {
+          "type": "number",
+          "minimum": 0.7,
+          "maximum": 1
+        }
+      }
+    },
+    "editorDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["image", "backgroundAdjustments", "focus", "typography", "export"],
+      "properties": {
+        "image": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/imageMetadata"
+            }
+          ]
+        },
+        "backgroundAdjustments": {
+          "$ref": "#/$defs/adjustments"
+        },
+        "focus": {
+          "$ref": "#/$defs/focusSettings"
+        },
+        "typography": {
+          "$ref": "#/$defs/typographySettings"
+        },
+        "export": {
+          "$ref": "#/$defs/exportSettings"
+        }
+      }
+    },
+    "editorUIState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activePanel", "interactionMode", "focusSelected", "dialog"],
+      "properties": {
+        "activePanel": {
+          "enum": ["image", "focus", "color", "typography", "export"]
+        },
+        "interactionMode": {
+          "enum": ["move-frame", "move-content"]
+        },
+        "focusSelected": {
+          "type": "boolean"
+        },
+        "dialog": {
+          "enum": ["none", "replace-image", "reset-project", "export-preview"]
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        }
+      }
+    },
+    "placementSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested", "placed", "skipped"],
+      "properties": {
+        "requested": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "placed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "skipped": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "editorRuntimeState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "imageStatus",
+        "renderStatus",
+        "saveStatus",
+        "filterBackend",
+        "bridgeAvailable",
+        "focusCoverage",
+        "lastError",
+        "typographyPlacement"
+      ],
+      "properties": {
+        "imageStatus": {
+          "enum": ["empty", "decoding", "ready", "error"]
+        },
+        "renderStatus": {
+          "enum": ["idle", "rendering", "error"]
+        },
+        "saveStatus": {
+          "enum": ["idle", "rendering", "writing-temp", "saving", "saved", "error"]
+        },
+        "filterBackend": {
+          "enum": ["unknown", "canvas-filter", "pixel-fallback", "unsupported"]
+        },
+        "bridgeAvailable": {
+          "type": "boolean"
+        },
+        "focusCoverage": {
+          "enum": ["full", "partial"]
+        },
+        "lastError": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/runtimeError"
+            }
+          ]
+        },
+        "typographyPlacement": {
+          "$ref": "#/$defs/placementSummary"
+        }
+      }
+    }
+  }
+}

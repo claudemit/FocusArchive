@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Focus Archive</title>
+  <link rel="stylesheet" href="./assets/style.css">
+</head>
+<body data-tool="edit">
+  <header>
+    <div class="mark"><img src="./assets/icon.png" alt="Focus Archive"></div>
+    <div><b>FOCUS ARCHIVE</b><small>局部聚焦 · 视觉编辑器</small></div>
+    <div class="spacer"></div>
+    <button id="reset" type="button">重置</button>
+    <button class="header-command" id="import" type="button">导入</button>
+    <button class="header-command primary" id="export" type="button">导出</button>
+    <input id="file" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+  </header>
+
+  <main>
+    <aside>
+      <section>
+        <div class="seg">
+          <button data-shape="rect" class="on" type="button">矩形</button>
+          <button data-shape="circle" type="button">圆形</button>
+        </div>
+        <div class="focus-param-row">
+          <label class="inline-control">放大 <input id="scale" type="range" min="1" max="3" step=".01" value="1"><output id="scaleOut">1.00×</output></label>
+          <label class="inline-control">旋转 <input id="rotation" type="range" min="-180" max="180" value="0"><output id="rotationOut">0°</output></label>
+        </div>
+        <div class="row">
+          <button id="flip" type="button">水平镜像</button>
+          <button id="transformReset" type="button">复位变换</button>
+        </div>
+      </section>
+    </aside>
+
+    <section class="stage">
+      <div class="stage-head"><span>ARTWORK / 001</span><span id="status">READY</span></div>
+      <div class="board-wrap">
+        <div id="board">
+          <canvas id="canvas"></canvas>
+          <svg id="overlay"></svg>
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        </div>
+      </div>
+      <div class="hint">拖动选框移动位置 · 拖动控制点调整范围</div>
+    </section>
+
+    <aside class="right">
+      <section>
+        <div class="color-groups">
+          <div class="color-group">
+            <h3>背景</h3>
+            <div id="bgControls" class="parameter-grid"></div>
+            <div class="parameter-grid effect-grid">
+              <label>模糊 <output id="blurOut">0px</output><input id="blur" type="range" min="0" max="30" value="0"></label>
+              <label>噪点 <output id="noiseOut">0px</output><input id="noise" type="range" min="0" max="16" value="0"></label>
+            </div>
+          </div>
+          <div class="color-group">
+            <h3>突出区域</h3>
+            <div id="focusControls" class="parameter-grid"></div>
+          </div>
+        </div>
+      </section>
+      <section>
+        <textarea id="text" rows="3">今晚月色很美。</textarea>
+        <div class="row">
+          <select id="bracket" aria-label="文字前后符号"><option value="paren">( )</option><option value="corner">「 」</option><option value="curly">{ }</option></select>
+          <select id="font" aria-label="文字样式"><option value="sans">无衬线</option><option value="serif">衬线</option><option value="mono">等宽</option><option value="italic">倾斜</option></select>
+        </div>
+        <div class="text-size-row">
+          <label class="inline-control">文字大小 <input id="textSize" type="range" min="12" max="72" value="24"><output id="textSizeOut">24px</output></label>
+          <button id="randomize" type="button">重置位置</button>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <nav class="tool-dock" aria-label="编辑工具">
+    <button data-mobile-tool="edit" class="on" type="button"><span>编辑</span></button>
+    <button data-mobile-tool="color" type="button"><span>调色</span></button>
+    <button data-mobile-tool="text" type="button"><span>文字</span></button>
+  </nav>
+
+  <dialog id="dialog">
+    <button id="close" type="button">关闭</button>
+    <p>导出图片</p>
+    <img id="result" alt="导出预览">
+    <div class="export-actions"><button class="primary" id="saveAlbum" type="button">保存到手机相册</button></div>
+    <p id="exportStatus" role="status" aria-live="polite"></p>
+  </dialog>
+  <script src="./assets/app.js"></script>
+</body>
+</html>
