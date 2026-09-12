@@ -1,6 +1,6 @@
 (function(){"use strict";var $=function(s){return document.querySelector(s)},canvas=$("#canvas"),ctx=canvas.getContext("2d"),svg=$("#overlay"),board=$("#board"),img=new Image(),objectUrl=null,imageHandlers=null,raf=0,drag=null,exportData="";
 var fonts={sans:'"Arial Narrow","Microsoft YaHei",sans-serif',serif:'Georgia,"Songti SC",serif',mono:'Consolas,monospace',italic:'"Arial Narrow","Microsoft YaHei",sans-serif'},noiseCache={key:"",canvas:null};
-var S={shape:"rect",mode:"frame",rect:{x:.23,y:.25,w:.54,h:.38},circle:{cx:.5,cy:.44,r:.23},scale:1,rotation:0,flip:false,panX:0,panY:0,bgBlur:1,noiseSize:1,bg:{contrast:10,exposure:-21,hue:0,saturation:-60},focus:{contrast:14,exposure:20,hue:0,saturation:20},text:"今晚月色很美。",bracket:"paren",font:"sans",textSize:24,seed:21873,items:[]};
+var S={shape:"rect",mode:"frame",rect:{x:.23,y:.25,w:.54,h:.38},circle:{cx:.5,cy:.44,r:.23},scale:1,rotation:0,flip:false,panX:0,panY:0,bgBlur:1,noiseSize:1,bg:{contrast:10,exposure:-21,hue:0,saturation:-60},focus:{contrast:14,exposure:20,hue:0,saturation:20},text:"今晚月色真美🌕",bracket:"paren",font:"sans",textSize:24,seed:21873,items:[]};
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
   function filter(a,blur){return"brightness("+(100*Math.pow(2,a.exposure/100))+"%) contrast("+(100+a.contrast)+"%) saturate("+(100+a.saturation)+"%) hue-rotate("+a.hue+"deg) blur("+(blur||0)+"px)"}
   function setCanvasFilter(value){if("filter" in ctx)ctx.filter=value}
