@@ -30,7 +30,18 @@
         </div>
         <div class="row">
           <button id="flip" type="button">水平镜像</button>
-          <button id="transformReset" type="button">复位变换</button>
+          <button id="transformReset" type="button">重置变换</button>
+        </div>
+      </section>
+      <section class="typography-panel">
+        <textarea id="text" rows="3">今晚月色很美。</textarea>
+        <div class="row">
+          <select id="bracket" aria-label="文字前后符号"><option value="paren">( )</option><option value="corner">「 」</option><option value="curly">{ }</option></select>
+          <select id="font" aria-label="文字样式"><option value="sans">无衬线</option><option value="serif">衬线</option><option value="mono">等宽</option><option value="italic">倾斜</option></select>
+        </div>
+        <div class="text-size-row">
+          <label class="inline-control">文字大小 <input id="textSize" type="range" min="12" max="72" value="24"><output id="textSizeOut">24px</output></label>
+          <button id="randomize" type="button">重置位置</button>
         </div>
       </section>
     </aside>
@@ -44,7 +55,6 @@
           <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
         </div>
       </div>
-      <div class="hint">拖动选框移动位置 · 拖动控制点调整范围</div>
     </section>
 
     <aside class="right">
@@ -54,8 +64,8 @@
             <h3>背景</h3>
             <div id="bgControls" class="parameter-grid"></div>
             <div class="parameter-grid effect-grid">
-              <label>模糊 <output id="blurOut">0px</output><input id="blur" type="range" min="0" max="30" value="0"></label>
-              <label>噪点 <output id="noiseOut">0px</output><input id="noise" type="range" min="0" max="16" value="0"></label>
+              <label>模糊 <output id="blurOut">1px</output><input id="blur" type="range" min="0" max="30" value="1"></label>
+              <label>噪点 <output id="noiseOut">1px</output><input id="noise" type="range" min="0" max="16" value="1"></label>
             </div>
           </div>
           <div class="color-group">
@@ -63,17 +73,7 @@
             <div id="focusControls" class="parameter-grid"></div>
           </div>
         </div>
-      </section>
-      <section>
-        <textarea id="text" rows="3">今晚月色很美。</textarea>
-        <div class="row">
-          <select id="bracket" aria-label="文字前后符号"><option value="paren">( )</option><option value="corner">「 」</option><option value="curly">{ }</option></select>
-          <select id="font" aria-label="文字样式"><option value="sans">无衬线</option><option value="serif">衬线</option><option value="mono">等宽</option><option value="italic">倾斜</option></select>
-        </div>
-        <div class="text-size-row">
-          <label class="inline-control">文字大小 <input id="textSize" type="range" min="12" max="72" value="24"><output id="textSizeOut">24px</output></label>
-          <button id="randomize" type="button">重置位置</button>
-        </div>
+        <button id="colorReset" class="color-reset" type="button">重置效果</button>
       </section>
     </aside>
   </main>
@@ -88,7 +88,7 @@
     <button id="close" type="button">关闭</button>
     <p>导出图片</p>
     <img id="result" alt="导出预览">
-    <div class="export-actions"><button class="primary" id="saveAlbum" type="button">保存到手机相册</button></div>
+    <div class="export-actions"><button class="primary" id="saveAlbum" type="button">保存</button></div>
     <p id="exportStatus" role="status" aria-live="polite"></p>
   </dialog>
   <script src="./assets/app.js"></script>
