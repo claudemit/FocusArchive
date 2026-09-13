@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "id": "cold-launch", "name": "冷启动无白屏", "requiredForProd": true },
+    { "id": "select-media", "name": "选择本地图片", "requiredForProd": true },
+    { "id": "core-edit-flow", "name": "局部聚焦、调色和文字主流程", "requiredForProd": true },
+    { "id": "export-image", "name": "图片导出内容和尺寸正确", "requiredForProd": true },
+    { "id": "save-image-album", "name": "PNG 保存到系统相册", "requiredForProd": true },
+    { "id": "export-animation-webp", "name": "动画 WebP 生成且保留多帧", "requiredForProd": true },
+    { "id": "save-animation-album", "name": "动画 WebP 保存相册后仍可播放", "requiredForProd": true },
+    { "id": "permission-recovery", "name": "相册权限拒绝后可恢复", "requiredForProd": true },
+    { "id": "safe-area-keyboard", "name": "安全区和软键盘布局", "requiredForProd": true },
+    { "id": "background-resume", "name": "切后台后恢复", "requiredForProd": true }
+  ]
+}

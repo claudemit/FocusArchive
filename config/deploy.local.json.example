@@ -1,0 +1,10 @@
+{
+  "test": {
+    "adapter": "verified-team-adapter",
+    "script": "./scripts/adapters/my-team-adapter.ps1"
+  },
+  "prod": {
+    "adapter": "manual",
+    "script": "./scripts/adapters/manual.ps1"
+  }
+}

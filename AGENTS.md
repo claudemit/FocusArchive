@@ -26,4 +26,11 @@ The machine-readable schema at `src/core/state/editor-state.schema.json` is the 
 
 ## Verification
 
-Run the phase-specific checks in `CURSOR_TASKS.md`. Before final delivery, audit both `dist/` and the ZIP with the workspace `minitool-zip-builder` audit script and complete its manual capability, JavaScript, CSS, cross-platform, and performance checklists.
+Run the phase-specific checks in `CURSOR_TASKS.md`. After any application, asset, build-script, test, or deployment-adapter change, run `npm run verify`. Before final delivery, audit both `dist/` and the ZIP with the workspace `minitool-zip-builder` audit script and complete its manual capability, JavaScript, CSS, cross-platform, and performance checklists.
+
+## Delivery workflow
+
+- `npm run dev` is for local DEV preview after static verification.
+- `npm run deploy:test` creates an immutable TEST ZIP, hash, deployment record, and phone-test report. A browser preview is not a real-device TEST.
+- Do not run `npm run release` unless the user provides the exact current-release approval `PROD:<releaseId>` in this conversation. Do not confirm platform publication without `CONFIRM_PROD:<releaseId>`, and do not roll back without `ROLLBACK:<releaseId>`.
+- Keep platform-specific calls behind `assets/platform/xhs-minitool.js`; do not directly access `window.xhs.miniTool` from application logic.

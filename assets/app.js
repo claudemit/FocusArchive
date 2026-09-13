@@ -54,7 +54,7 @@ function resetColorEffects(){S.bg.contrast=10;S.bg.exposure=-21;S.bg.hue=0;S.bg.
 function point(e){var r=svg.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}function pointerDown(e){if(timeline.playing)pauseTimeline();var p=point(e),h=e.target.getAttribute("data-handle"),body=e.target.getAttribute("data-role");if(!h&&!body)return;drag={p:p,h:h,rect:Object.assign({},S.rect),circle:Object.assign({},S.circle),panX:S.panX,panY:S.panY};svg.setPointerCapture(e.pointerId)}function pointerMove(e){if(!drag)return;var p=point(e),dx=(p.x-drag.p.x)/canvas.width,dy=(p.y-drag.p.y)/canvas.height;if(!drag.h){if(S.mode==="content"){S.panX=clamp(drag.panX+dx/S.scale,-.6,.6);S.panY=clamp(drag.panY+dy/S.scale,-.6,.6)}else if(S.shape==="rect"){S.rect.x=clamp(drag.rect.x+dx,0,1-S.rect.w);S.rect.y=clamp(drag.rect.y+dy,0,1-S.rect.h)}else{var rr=S.circle.r*Math.min(canvas.width,canvas.height);S.circle.cx=clamp(drag.circle.cx+dx,rr/canvas.width,1-rr/canvas.width);S.circle.cy=clamp(drag.circle.cy+dy,rr/canvas.height,1-rr/canvas.height)}}else if(S.shape==="circle"){var cx=S.circle.cx*canvas.width,cy=S.circle.cy*canvas.height;S.circle.r=clamp(Math.hypot(p.x-cx,p.y-cy)/Math.min(canvas.width,canvas.height),.06,Math.min(cx,canvas.width-cx,cy,canvas.height-cy)/Math.min(canvas.width,canvas.height))}else{var r=drag.rect,x2=r.x+r.w,y2=r.y+r.h,min=.06;if(drag.h.indexOf("w")>=0){S.rect.x=clamp(r.x+dx,0,x2-min);S.rect.w=x2-S.rect.x}else if(drag.h.indexOf("e")>=0)S.rect.w=clamp(r.w+dx,min,1-r.x);if(drag.h.indexOf("n")>=0){S.rect.y=clamp(r.y+dy,0,y2-min);S.rect.h=y2-S.rect.y}else if(drag.h.indexOf("s")>=0)S.rect.h=clamp(r.h+dy,min,1-r.y)}if(S.mode==="content"&&!drag.h)schedule();else queueFocusLayout()}function pointerEnd(){drag=null;layout()}svg.addEventListener("pointerdown",pointerDown);svg.addEventListener("pointermove",pointerMove);svg.addEventListener("pointerup",pointerEnd);svg.addEventListener("pointercancel",pointerEnd);
 function setAppHeight(){var viewport=window.visualViewport,height=viewport?viewport.height:window.innerHeight;document.documentElement.style.setProperty("--app-height",height+"px")}
 function updatePanelHeight(){if(window.innerWidth>1080){document.documentElement.style.removeProperty("--panel-height");return}var asides=document.querySelectorAll("main>aside"),active=null;for(var i=0;i<asides.length;i++)if(window.getComputedStyle(asides[i]).display!=="none")active=asides[i];if(!active)return;var sections=active.querySelectorAll("section"),content=0;for(var j=0;j<sections.length;j++)if(window.getComputedStyle(sections[j]).display!=="none")content+=sections[j].scrollHeight;var viewport=window.visualViewport,height=viewport?viewport.height:window.innerHeight,max=Math.max(190,(height-106)*.52),desired=clamp(content+2,150,max);document.documentElement.style.setProperty("--panel-height",Math.round(desired)+"px")}
-  function bridge(){return window.xhs&&window.xhs.miniTool?window.xhs.miniTool:null}
+  function bridge(){return window.FocusArchivePlatform&&window.FocusArchivePlatform.getMiniTool?window.FocusArchivePlatform.getMiniTool():null}
   function exportMessage(message,isError){var status=$("#exportStatus");status.textContent=message||"";status.className=isError?"error":""}
   function openExportDialog(){var dialog=$("#dialog");if(!dialog)return;if(typeof dialog.showModal==="function")dialog.showModal();else{dialog.setAttribute("open","open");dialog.setAttribute("role","dialog");dialog.setAttribute("aria-modal","true")}}
   function closeExportDialog(){if(animationJob){var job=animationJob;animationJob=null;if(job.cancel)job.cancel()}render(false);var dialog=$("#dialog");if(!dialog)return;if(typeof dialog.close==="function")dialog.close();else dialog.removeAttribute("open")}
@@ -63,23 +63,20 @@ function paintImageSave(){var b=$("#saveAlbum");b.classList.toggle("is-saving",i
 function canSaveToAlbum(){var nativeBridge=bridge();return!!(nativeBridge&&nativeBridge.writeTempFile&&nativeBridge.saveImageToPhotosAlbum)}
 function canSaveToComputer(){return typeof window.showSaveFilePicker==="function"}
 function canRecordAnimation(){return!!(window.VideoEncoder&&window.VideoEncoder.isConfigSupported&&window.VideoFrame&&window.encodeStandardMp4)}
-function canSaveAnimation(){return !animationJob&&!timeline.recording&&timeline.events.length>1&&canRecordAnimation()&&(bridge()?canSaveToAlbum():canSaveToComputer())}
-// Experimental, user-requested MP4 album probe; native video support is unverified.
-function animationDataUri(blob){return new Promise(function(resolve,reject){var reader=new FileReader();reader.addEventListener("load",function(){resolve(reader.result)});reader.addEventListener("error",function(){reject(reader.error||new Error("读取 MP4 失败"))});reader.readAsDataURL(blob)})}
+function canEncodeAnimatedWebP(){return typeof window.encodeAnimatedWebP==="function"}
+function canSaveAnimation(){var album=canSaveToAlbum();return !animationJob&&!timeline.recording&&timeline.events.length>1&&(album?canEncodeAnimatedWebP():canRecordAnimation()&&canSaveToComputer())}
+function animationDataUri(blob){return new Promise(function(resolve,reject){var reader=new FileReader();reader.addEventListener("load",function(){resolve(reader.result)});reader.addEventListener("error",function(){reject(reader.error||new Error("读取动画失败"))});reader.readAsDataURL(blob)})}
 async function saveAnimationToAlbum(blob,job){
-var nativeBridge=bridge(),stage="转换 MP4";
+var nativeBridge=bridge(),stage="转换动画 WebP";
 function active(){return animationJob===job}
 try{
 var data=await animationDataUri(blob);if(!active())return;
-stage="写入视频临时文件";exportMessage(stage+"…",false);
-var temp=await nativeBridge.writeTempFile({data:data});data=null;if(!active())return;
-if(!temp||!temp.filePath)throw new Error("接口没有返回 filePath");
-stage="保存视频到相册（测试）";exportMessage(stage+"…",false);
-await nativeBridge.saveImageToPhotosAlbum({filePath:temp.filePath});if(!active())return;
-saveCounts.video++;exportMessage("相册接口返回成功，请检查视频是否已出现在相册并可播放",false);
+stage="直接保存动画 WebP 到相册";exportMessage(stage+"…",false);
+await nativeBridge.saveImageToPhotosAlbum({filePath:data});data=null;if(!active())return;
+saveCounts.video++;exportMessage("动画 WebP 已保存到手机相册，请检查是否保留动态效果",false);
 }catch(error){if(active())exportMessage(stage+"失败："+String(error&&(error.errMsg||error.message)||error)+(error&&error.errCode!==undefined?"（错误码 "+error.errCode+"）":""),true)}
 }
-function updateSaveActions(){var save=$("#saveAlbum"),video=$("#saveAnimation"),album=canSaveToAlbum(),computer=canSaveToComputer();paintImageSave();save.title=album?"保存到手机相册":computer?"保存到本地硬盘":"当前浏览器不支持保存";video.disabled=!canSaveAnimation();video.classList.toggle("is-saving",!!animationJob);video.setAttribute("aria-busy",animationJob?"true":"false");video.textContent=animationJob?"正在保存…":"保存动画";video.title=video.disabled?(!timeline.events.length?"请先录制参数变化":canRecordAnimation()?"当前环境无法保存动画":"当前浏览器不支持 MP4 动画编码"):"生成并保存动画";if(!animationJob&&!imageSaving&&$("#dialog").hasAttribute("open"))exportMessage(album?"保存图片到手机相册":computer?"保存图片到本地硬盘，选择保存位置":"当前预览环境不支持保存图片",false)}
+function updateSaveActions(){var save=$("#saveAlbum"),video=$("#saveAnimation"),album=canSaveToAlbum(),computer=canSaveToComputer();paintImageSave();save.title=album?"保存到手机相册":computer?"保存到本地硬盘":"当前浏览器不支持保存";video.disabled=!canSaveAnimation();video.classList.toggle("is-saving",!!animationJob);video.setAttribute("aria-busy",animationJob?"true":"false");video.textContent=animationJob?"正在保存…":"保存动画";video.title=video.disabled?(!timeline.events.length?"请先录制参数变化":album?(canEncodeAnimatedWebP()?"当前环境无法保存动画":"当前浏览器不支持动画 WebP 编码"):(canRecordAnimation()?"当前环境无法保存动画":"当前浏览器不支持 MP4 动画编码")):(album?"生成动画 WebP 并保存到手机相册":"生成 MP4 并保存到本地硬盘");if(!animationJob&&!imageSaving&&$("#dialog").hasAttribute("open"))exportMessage(album?"图片保存为 PNG；动画保存为 WebP":computer?"保存到本地硬盘，选择保存位置":"当前预览环境不支持保存图片",false)}
 async function saveToAlbum(){var nativeBridge=bridge();if(!exportData||!nativeBridge||!nativeBridge.writeTempFile||!nativeBridge.saveImageToPhotosAlbum)return;exportMessage("正在保存到相册…",false);try{var temp=await nativeBridge.writeTempFile({data:exportData});await nativeBridge.saveImageToPhotosAlbum({filePath:temp.filePath});saveCounts.image++;exportMessage("已保存到手机相册",false)}catch(error){exportMessage(error&&error.errMsg?error.errMsg:"保存失败，请检查相册权限",true)}}
 function dataUrlToBlob(dataUrl){var parts=dataUrl.split(","),head=parts[0]||"",payload=parts[1]||"",match=/^data:([^;]+);base64$/.exec(head),binary=atob(payload),bytes=new Uint8Array(binary.length),i;for(i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return new Blob([bytes],{type:match?match[1]:"image/png"})}
 async function saveToComputer(){if(!exportData||!canSaveToComputer())return;try{var handle=await window.showSaveFilePicker({suggestedName:nextSaveName("image"),types:[{description:"PNG 图片",accept:{"image/png":[".png"]}}]}),writable=await handle.createWritable();await writable.write(dataUrlToBlob(exportData));await writable.close();saveCounts.image++;exportMessage("已保存到本地硬盘",false)}catch(error){if(error&&error.name==="AbortError"){exportMessage("已取消保存",false);return}exportMessage("保存失败，请检查浏览器文件权限",true)}}
@@ -88,25 +85,26 @@ async function saveAnimationBlob(blob,handle){try{var writable=await handle.crea
 async function exportAnimation(){
 if(!canSaveAnimation())return;
 if(timeline.playing)pauseTimeline();
-var events=timeline.events.slice(),duration=timeline.duration,job={cancel:null},handle,cancelled=false;
+var events=timeline.events.slice(),duration=timeline.duration,job={cancel:null},handle,cancelled=false,album=canSaveToAlbum();
 job.cancel=function(){cancelled=true};
 animationJob=job;updateSaveActions();
 try{
-if(!bridge())handle=await window.showSaveFilePicker({suggestedName:nextSaveName("video"),types:[{description:"MP4 视频",accept:{"video/mp4":[".mp4"]}}]});
+if(!album)handle=await window.showSaveFilePicker({suggestedName:nextSaveName("video"),types:[{description:"MP4 视频",accept:{"video/mp4":[".mp4"]}}]});
 if(animationJob!==job)return;
-var scale=Math.min(1,1280/Math.max(canvas.width,canvas.height)),w,h;
-do{w=Math.max(2,Math.floor(canvas.width*scale/2)*2);h=Math.max(2,Math.floor(canvas.height*scale/2)*2);scale*=.98}while(Math.ceil(w/16)*Math.ceil(h/16)>3600);
+var scale=Math.min(1,(album?720:1280)/Math.max(canvas.width,canvas.height)),w,h;
+do{w=Math.max(2,Math.floor(canvas.width*scale/2)*2);h=Math.max(2,Math.floor(canvas.height*scale/2)*2);scale*=.98}while(!album&&Math.ceil(w/16)*Math.ceil(h/16)>3600);
 var out=document.createElement("canvas");out.width=w;out.height=h;var index=0,textScale=w/canvas.width;
-exportMessage("正在生成兼容 MP4…",false);
-var blob=await window.encodeStandardMp4({canvas:out,duration:duration,cancelled:function(){return cancelled||animationJob!==job},progress:function(p){exportMessage("正在生成 MP4："+Math.round(p*100)+"%",false)},draw:function(time){
+exportMessage(album?"正在生成动画 WebP…":"正在生成兼容 MP4…",false);
+var encoder=album?window.encodeAnimatedWebP:window.encodeStandardMp4;
+var blob=await encoder({canvas:out,duration:duration,fps:8,quality:.8,cancelled:function(){return cancelled||animationJob!==job},progress:function(p){exportMessage((album?"正在生成 WebP：":"正在生成 MP4：")+Math.round(p*100)+"%",false)},draw:function(time){
 while(index<events.length-1&&events[index+1].t<=time)index++;
 var state=Object.assign({},events[index].state);
 state.items=state.items.map(function(item){return Object.assign({},item,{fontPx:item.fontPx*textScale})});
 renderTo(out,state);
 }});
 if(cancelled||animationJob!==job)return;
-if(bridge())await saveAnimationToAlbum(blob,job);else await saveAnimationBlob(blob,handle);
-}catch(error){if(animationJob===job)exportMessage(!bridge()&&error&&error.name==="AbortError"?"已取消保存动画":"生成或保存动画失败："+String(error&&(error.errMsg||error.message)||error),true)}
+if(album)await saveAnimationToAlbum(blob,job);else await saveAnimationBlob(blob,handle);
+}catch(error){if(animationJob===job)exportMessage(!album&&error&&error.name==="AbortError"?"已取消保存动画":"生成或保存动画失败："+String(error&&(error.errMsg||error.message)||error),true)}
 finally{if(animationJob===job)animationJob=null;$("#saveAnimation").disabled=!canSaveAnimation();$("#saveAnimation").classList.toggle("is-saving",!!animationJob);$("#saveAnimation").setAttribute("aria-busy",animationJob?"true":"false");$("#saveAnimation").textContent=animationJob?"正在保存…":"保存动画";render(false)}
 }
   document.querySelectorAll("[data-mobile-tool]").forEach(function(button){button.addEventListener("click",function(){document.body.setAttribute("data-tool",button.getAttribute("data-mobile-tool"));document.querySelectorAll("[data-mobile-tool]").forEach(function(item){item.classList.remove("on")});button.classList.add("on");requestAnimationFrame(function(){updatePanelHeight();size()})})});

@@ -1,0 +1,7 @@
+artifacts/
+deployments/
+.focus/
+dist/build-meta.json
+config/deploy.local.json
+*.log
+node_modules/

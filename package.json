@@ -1,0 +1,20 @@
+{
+  "name": "focus-archive-minitool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FOCUS ARCHIVE offline mini-tool with gated DEV, TEST, and PROD workflow",
+  "scripts": {
+    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev.ps1",
+    "build": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build.ps1 -Stage DEV",
+    "build:test": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build.ps1 -Stage TEST",
+    "test": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/test.ps1 -Stage DEV",
+    "verify": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/test.ps1 -Stage DEV",
+    "deploy:test": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/deploy-test.ps1",
+    "release": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/release.ps1 -Mode Publish",
+    "release:confirm": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/release.ps1 -Mode ConfirmPublished",
+    "rollback": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/release.ps1 -Mode Rollback"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
