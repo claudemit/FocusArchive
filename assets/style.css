@@ -61,6 +61,18 @@ dialog #close,dialog #close:hover,dialog #close:active,dialog #close:focus{borde
 .recording-head{height:48px;justify-content:center;gap:14px;padding:0 16px}.record-actions{display:flex;gap:5px;flex:0 0 auto}.record-actions button{min-height:28px;padding:4px 10px;font-size:11px}.record-actions button:disabled{opacity:.36;cursor:not-allowed}.timeline-control{display:grid;grid-template-columns:auto minmax(70px,180px) 36px;align-items:center;gap:7px;margin:0;min-width:0;font-size:10px;letter-spacing:.08em}.timeline-control input[type=range]{grid-column:2;grid-row:1;margin:0;height:24px}.timeline-control output{grid-column:3;grid-row:1;float:none;text-align:right;font-size:10px}@media(max-width:1080px){.recording-head{height:42px;gap:8px;padding:0 10px}.record-actions{gap:3px}.record-actions button{min-height:27px;padding:3px 7px;font-size:10px}.timeline-control{grid-template-columns:auto minmax(54px,1fr) 31px;gap:4px;flex:1}.timeline-control input[type=range]{height:22px}.timeline-control output{font-size:9px}}
 /* Timeline controls match the typography command labels. */
 .record-actions{gap:6px}
+/* Chrome 61 baseline: flexbox does not honor gap. Keep the same visual spacing
+   through margins while newer engines continue to use the existing declarations. */
+.text-size-row{gap:0}.text-size-row>*+*{margin-left:9px}
+.text-content-row{gap:0}.text-content-row>*+*{margin-left:9px}
+.repeat-control{gap:0}.repeat-control input{margin-top:6px}
+.emoji-tone{gap:0}.emoji-tone input{margin-left:5px}
+.typography-options{gap:0;grid-column-gap:9px}
+.select-control{gap:0;grid-column-gap:4px}
+.recording-head{gap:0}.record-actions{gap:0}.record-actions button+button{margin-left:6px}.record-actions+.timeline-control{margin-left:14px}
+.timeline-control{gap:0;grid-column-gap:7px}
+@media(max-width:1080px){.recording-head{gap:0}.record-actions{gap:0}.record-actions button+button{margin-left:3px}.record-actions+.timeline-control{margin-left:8px}.timeline-control{gap:0;grid-column-gap:4px}}
+@media(max-width:430px){.typography-options{gap:0;grid-column-gap:6px}.select-control{gap:0;grid-column-gap:2px}.recording-head{gap:0}.record-actions{gap:0}.record-actions button+button{margin-left:3px}.record-actions+.timeline-control{margin-left:6px}}
 .record-actions button{font-size:var(--ui-text);min-height:36px;min-width:52px;padding:6px 12px;white-space:nowrap}
 .timeline-control{flex:0 1 460px;grid-template-columns:auto minmax(40px,1fr) auto}
 .timeline-control output{white-space:nowrap;min-width:80px}
@@ -68,4 +80,3 @@ dialog #close,dialog #close:hover,dialog #close:active,dialog #close:focus{borde
 @media(max-width:1080px){.recording-head{height:48px}.timeline-control{flex:0 1 460px}.record-actions button{font-size:var(--ui-text);min-height:36px;min-width:52px;padding:6px 12px}}
 @media(max-width:430px){.record-actions{gap:3px}.record-actions button{font-size:11px;min-width:40px;padding:5px 7px}.recording-head{gap:6px;padding:0 6px}.timeline-control{grid-template-columns:minmax(30px,1fr) auto}.timeline-control>span{display:none}.timeline-control input[type=range]{grid-column:1}.timeline-control output{grid-column:2;min-width:68px}}
 #saveAlbum.is-saving,#saveAlbum.is-saving:disabled,#saveAlbum:active{background:var(--accent);border-color:var(--accent);color:#111;opacity:1}#saveAlbum.is-saving{cursor:progress}
-

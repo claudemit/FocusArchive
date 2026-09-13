@@ -63,7 +63,22 @@ function paintImageSave(){var b=$("#saveAlbum");b.classList.toggle("is-saving",i
 function canSaveToAlbum(){var nativeBridge=bridge();return!!(nativeBridge&&nativeBridge.writeTempFile&&nativeBridge.saveImageToPhotosAlbum)}
 function canSaveToComputer(){return typeof window.showSaveFilePicker==="function"}
 function canRecordAnimation(){return!!(window.VideoEncoder&&window.VideoEncoder.isConfigSupported&&window.VideoFrame&&window.encodeStandardMp4)}
-function canSaveAnimation(){return !animationJob&&!timeline.recording&&timeline.events.length>1&&canRecordAnimation()&&canSaveToComputer()}
+function canSaveAnimation(){return !animationJob&&!timeline.recording&&timeline.events.length>1&&canRecordAnimation()&&(bridge()?canSaveToAlbum():canSaveToComputer())}
+// Experimental, user-requested MP4 album probe; native video support is unverified.
+function animationDataUri(blob){return new Promise(function(resolve,reject){var reader=new FileReader();reader.addEventListener("load",function(){resolve(reader.result)});reader.addEventListener("error",function(){reject(reader.error||new Error("读取 MP4 失败"))});reader.readAsDataURL(blob)})}
+async function saveAnimationToAlbum(blob,job){
+var nativeBridge=bridge(),stage="转换 MP4";
+function active(){return animationJob===job}
+try{
+var data=await animationDataUri(blob);if(!active())return;
+stage="写入视频临时文件";exportMessage(stage+"…",false);
+var temp=await nativeBridge.writeTempFile({data:data});data=null;if(!active())return;
+if(!temp||!temp.filePath)throw new Error("接口没有返回 filePath");
+stage="保存视频到相册（测试）";exportMessage(stage+"…",false);
+await nativeBridge.saveImageToPhotosAlbum({filePath:temp.filePath});if(!active())return;
+saveCounts.video++;exportMessage("相册接口返回成功，请检查视频是否已出现在相册并可播放",false);
+}catch(error){if(active())exportMessage(stage+"失败："+String(error&&(error.errMsg||error.message)||error)+(error&&error.errCode!==undefined?"（错误码 "+error.errCode+"）":""),true)}
+}
 function updateSaveActions(){var save=$("#saveAlbum"),video=$("#saveAnimation"),album=canSaveToAlbum(),computer=canSaveToComputer();paintImageSave();save.title=album?"保存到手机相册":computer?"保存到本地硬盘":"当前浏览器不支持保存";video.disabled=!canSaveAnimation();video.classList.toggle("is-saving",!!animationJob);video.setAttribute("aria-busy",animationJob?"true":"false");video.textContent=animationJob?"正在保存…":"保存动画";video.title=video.disabled?(!timeline.events.length?"请先录制参数变化":canRecordAnimation()?"当前环境无法保存动画":"当前浏览器不支持 MP4 动画编码"):"生成并保存动画";if(!animationJob&&!imageSaving&&$("#dialog").hasAttribute("open"))exportMessage(album?"保存图片到手机相册":computer?"保存图片到本地硬盘，选择保存位置":"当前预览环境不支持保存图片",false)}
 async function saveToAlbum(){var nativeBridge=bridge();if(!exportData||!nativeBridge||!nativeBridge.writeTempFile||!nativeBridge.saveImageToPhotosAlbum)return;exportMessage("正在保存到相册…",false);try{var temp=await nativeBridge.writeTempFile({data:exportData});await nativeBridge.saveImageToPhotosAlbum({filePath:temp.filePath});saveCounts.image++;exportMessage("已保存到手机相册",false)}catch(error){exportMessage(error&&error.errMsg?error.errMsg:"保存失败，请检查相册权限",true)}}
 function dataUrlToBlob(dataUrl){var parts=dataUrl.split(","),head=parts[0]||"",payload=parts[1]||"",match=/^data:([^;]+);base64$/.exec(head),binary=atob(payload),bytes=new Uint8Array(binary.length),i;for(i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return new Blob([bytes],{type:match?match[1]:"image/png"})}
@@ -77,7 +92,7 @@ var events=timeline.events.slice(),duration=timeline.duration,job={cancel:null},
 job.cancel=function(){cancelled=true};
 animationJob=job;updateSaveActions();
 try{
-handle=await window.showSaveFilePicker({suggestedName:nextSaveName("video"),types:[{description:"MP4 视频",accept:{"video/mp4":[".mp4"]}}]});
+if(!bridge())handle=await window.showSaveFilePicker({suggestedName:nextSaveName("video"),types:[{description:"MP4 视频",accept:{"video/mp4":[".mp4"]}}]});
 if(animationJob!==job)return;
 var scale=Math.min(1,1280/Math.max(canvas.width,canvas.height)),w,h;
 do{w=Math.max(2,Math.floor(canvas.width*scale/2)*2);h=Math.max(2,Math.floor(canvas.height*scale/2)*2);scale*=.98}while(Math.ceil(w/16)*Math.ceil(h/16)>3600);
@@ -90,8 +105,8 @@ state.items=state.items.map(function(item){return Object.assign({},item,{fontPx:
 renderTo(out,state);
 }});
 if(cancelled||animationJob!==job)return;
-await saveAnimationBlob(blob,handle);
-}catch(error){exportMessage(error&&error.name==="AbortError"?"已取消保存动画":"保存动画失败："+error.message,true)}
+if(bridge())await saveAnimationToAlbum(blob,job);else await saveAnimationBlob(blob,handle);
+}catch(error){if(animationJob===job)exportMessage(!bridge()&&error&&error.name==="AbortError"?"已取消保存动画":"生成或保存动画失败："+String(error&&(error.errMsg||error.message)||error),true)}
 finally{if(animationJob===job)animationJob=null;$("#saveAnimation").disabled=!canSaveAnimation();$("#saveAnimation").classList.toggle("is-saving",!!animationJob);$("#saveAnimation").setAttribute("aria-busy",animationJob?"true":"false");$("#saveAnimation").textContent=animationJob?"正在保存…":"保存动画";render(false)}
 }
   document.querySelectorAll("[data-mobile-tool]").forEach(function(button){button.addEventListener("click",function(){document.body.setAttribute("data-tool",button.getAttribute("data-mobile-tool"));document.querySelectorAll("[data-mobile-tool]").forEach(function(item){item.classList.remove("on")});button.classList.add("on");requestAnimationFrame(function(){updatePanelHeight();size()})})});
