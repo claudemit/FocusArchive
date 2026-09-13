@@ -52,7 +52,10 @@
     </aside>
 
     <section class="stage">
-      <div class="stage-head"><span>ARTWORK / 001</span><span id="status">READY</span></div>
+      <div class="stage-head recording-head">
+        <div class="record-actions"><button id="recordStart" type="button">录制</button><button id="recordStop" type="button" disabled>结束</button><button id="recordPlay" type="button" disabled>回放</button></div>
+        <label class="timeline-control"><span>参数时间轴</span><input id="timeline" type="range" min="0" max="1" value="0" disabled><output id="timelineOut">00:00</output></label>
+      </div>
       <div class="board-wrap">
         <div id="board">
           <canvas id="canvas"></canvas>
@@ -91,11 +94,12 @@
 
   <dialog id="dialog">
     <button id="close" type="button">关闭</button>
-    <p>导出图片</p>
+    <p>导出</p>
     <img id="result" alt="导出预览">
-    <div class="export-actions"><button class="primary" id="saveAlbum" type="button">保存</button></div>
+    <div class="export-actions"><button id="saveAlbum" type="button">保存图片</button><button id="saveAnimation" type="button" disabled>保存动画</button></div>
     <p id="exportStatus" role="status" aria-live="polite"></p>
   </dialog>
+  <script src="./assets/mp4-standard.js"></script>
   <script src="./assets/app.js"></script>
 </body>
 </html>
