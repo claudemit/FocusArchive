@@ -1,7 +1,7 @@
 # MasterGo UI Semantic Normalization — 2026-09-25
 
 ## Source and scope
-Source HEAD: 7b5d021 plus this working-tree change.
+Source HEAD: c5be507 plus this working-tree change.
 Reference: public MasterGo RedBook file 204324829037842, containers 1:0 / 17:161 / 17:155.
 All three containers were inspected in the preceding browser session. Reconnection through the in-app browser tool failed this turn; no new design-version metadata was obtained. Layout interpretation is based on those rendered views, not exact design layer measurements.
 
@@ -15,15 +15,17 @@ Existing implementation is index.html + classic assets/app.js, not the proposed 
 - Export retains the primary-action semantic; compact layout uses the reference's orange-text treatment.
 - Existing sliders share one labeled numeric-output row pattern. Text input and native property selects are reused.
 - Text repeat and desaturation grouped beside textarea. Background and focus adjustments form two compact columns.
-- Existing noise control and defaults retained; design screenshots are not authority to remove functionality.
+- Noise controls and rendering were removed at product direction; design screenshots are not authority to add functionality.
 - Duplicate CSS overrides consolidated. Existing palette/type values and repeated spacing promoted into shared tokens; 44px interaction targets follow the existing PRD.
 - Canvas contain-fit now measures actual padding without the previous 220px minimum, preventing overflow when panels or keyboard reduce available height.
+- Compact 360×793 layout now has a tokenized 48px design top reserve and 33px bottom reserve, each added to supported device safe-area insets. The brand/command/timeline baseline is 52/81/123px; the dock is 719px from the viewport top with its controls ending at 760px.
 
 ## Verified
 - Independent headless Microsoft Edge regression: 360x623, 360x793, 720x800, 1280x900.
 - Three panels, no body horizontal overflow, positive contained canvas bounds.
 - Circle selection and pressed state; mirror/reset; record/start-stop visibility; export preview open/close.
 - No browser page errors. Screenshots under artifacts/ui-normalization; representative compact and desktop images visually inspected.
+- The 360×793 test also asserts the reference top and bottom safe-area geometry before checking each of the three mobile containers.
 - npm run verify attempted: existing child PowerShell Get-FileHash resolution failure.
 - Equivalent direct scripts/test.ps1 -Stage DEV: PASS (build, static container gates, JS syntax, ZIP root, hash and directory/ZIP audits).
 - Independent minitool audit: dist 12 files / 0 warnings; final ZIP size PASS.

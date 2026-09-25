@@ -31,8 +31,8 @@
         <button id="transformReset" class="icon-button reset-icon" type="button" aria-label="重置变换" title="重置变换"></button>
         </div>
         <div class="focus-param-row">
-          <label class="inline-control">放大 <input id="scale" type="range" min="1" max="3" step=".01" value="1"><output id="scaleOut">1.00×</output></label>
-          <label class="inline-control">旋转 <input id="rotation" type="range" min="-180" max="180" value="0"><output id="rotationOut">0°</output></label>
+          <label class="inline-control">放大 <input id="scale" type="range" min="1" max="3" step=".01" value="1"><output id="scaleOut" hidden>1.00×</output></label>
+          <label class="inline-control">旋转 <input id="rotation" type="range" min="-180" max="180" value="0"><output id="rotationOut" hidden>0°</output></label>
           <button id="flip" class="icon-button mirror-icon" type="button" aria-label="水平镜像" title="水平镜像" aria-pressed="false"></button>
         </div>
       </section>
@@ -49,8 +49,8 @@
           <label class="select-control">样式 <select id="font" aria-label="文字样式"><option value="sans">无衬线</option><option value="serif">衬线</option><option value="mono">等宽</option><option value="italic">倾斜</option></select></label>
         </div>
         <div class="text-size-row">
-          <label class="inline-control">字高 <input id="textSize" type="range" min="12" max="72" value="24"><output id="textSizeOut">24px</output></label>
-          <label class="inline-control">错落 <input id="stagger" type="range" min="0" max="1" step=".01" value="0"><output id="staggerOut">0.00</output></label>
+          <label class="inline-control">字高 <input id="textSize" type="range" min="12" max="72" value="24"><output id="textSizeOut" hidden>24px</output></label>
+          <label class="inline-control">错落 <input id="stagger" type="range" min="0" max="1" step=".01" value="0"><output id="staggerOut" hidden>0.00</output></label>
           <button id="randomize" class="icon-button reset-icon" type="button" aria-label="重置文字位置" title="重置文字位置"></button>
         </div>
       </section>
@@ -59,7 +59,7 @@
     <section class="stage">
       <div class="stage-head recording-head">
         <button id="recordPlay" type="button" disabled>回放</button>
-        <label class="timeline-control"><span class="sr-only">参数时间轴</span><input id="timeline" type="range" min="0" max="1" value="0" disabled><output id="timelineOut">00:00</output></label>
+        <label class="timeline-control"><span class="sr-only">参数时间轴</span><input id="timeline" type="range" min="0" max="1" value="0" disabled><output id="timelineOut" hidden>00:00</output></label>
       </div>
       <div class="board-wrap">
         <div id="board">
@@ -77,8 +77,7 @@
             <h3>背景图片</h3>
             <div id="bgControls" class="parameter-grid"></div>
             <div class="parameter-grid effect-grid">
-              <label>模糊 <output id="blurOut">1px</output><input id="blur" type="range" min="0" max="30" value="1"></label>
-              <label>噪点 <output id="noiseOut">1px</output><input id="noise" type="range" min="0" max="16" value="1"></label>
+              <label>模糊 <input id="blur" type="range" min="0" max="30" value="1"><output id="blurOut" hidden>1px</output></label>
             </div>
           </div>
           <div class="color-group">
@@ -107,6 +106,7 @@
   <script src="./assets/platform/xhs-minitool.js"></script>
   <script src="./assets/webp-animation.js"></script>
   <script src="./assets/mp4-standard.js"></script>
+  <script src="./assets/webm-animation.js"></script>
   <script src="./assets/app.js"></script>
   <script src="./assets/ui-controls.js"></script>
 </body>

@@ -14,6 +14,27 @@ const path = require('node:path');
       page.on('pageerror', e => errors.push(e.message));
       await page.goto('http://127.0.0.1:4173/');
       await page.waitForFunction(() => document.querySelector('canvas').width > 300);
+      assert.equal(await page.locator('#noise').count(),0,'noise controls must be removed');
+      assert.equal(await page.locator('output:visible').count(),0,'slider value text must not be visible');
+      if (viewport.width === 360 && viewport.height === 793) {
+        const rect = selector => page.locator(selector).evaluate(node => {
+          const value = node.getBoundingClientRect();
+          return {top:Math.round(value.top),height:Math.round(value.height),bottom:Math.round(value.bottom)};
+        });
+        assert.deepEqual({
+          brand:await rect('.brand'),
+          command:await rect('.command-bar'),
+          timeline:await rect('.stage-head'),
+          dock:await rect('.tool-dock'),
+          dockButton:await rect('.tool-dock button:first-child')
+        },{
+          brand:{top:52,height:26,bottom:78},
+          command:{top:81,height:42,bottom:123},
+          timeline:{top:123,height:44,bottom:167},
+          dock:{top:719,height:74,bottom:793},
+          dockButton:{top:720,height:40,bottom:760}
+        },'360x793 mobile safe-area geometry must match the approved design baseline');
+      }
       for (const tool of ['edit','text','color']) {
         if (viewport.width <= 1080) await page.locator('[data-mobile-tool="'+tool+'"]').click();
         await page.waitForTimeout(100);

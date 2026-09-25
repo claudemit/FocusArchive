@@ -28,8 +28,8 @@ return new Blob([ftyp,meta,u32([total+8]),ascii("mdat")].concat(samples.map(func
 }
 root.encodeStandardMp4=async function(options){
 var canvas=options.canvas,count=Math.max(2,Math.ceil(options.duration*30/1000)+1),samples=[],description=null,failure=null,bytes=0;
-var config={codec:"avc1.42001f",width:canvas.width,height:canvas.height,framerate:30,bitrate:6000000,hardwareAcceleration:"prefer-software",avc:{format:"avc"},latencyMode:"realtime"};
-var support=await VideoEncoder.isConfigSupported(config);if(!support.supported)throw Error("当前浏览器不支持标准 H.264 软件编码，请使用最新版 Chrome 或 Edge");
+var support=await root.findStandardMp4Support(canvas.width,canvas.height);
+if(!support||!support.supported)throw Error("当前浏览器不支持 H.264 视频编码");
 var encoder=new VideoEncoder({output:function(chunk,metadata){var data=new Uint8Array(chunk.byteLength);chunk.copyTo(data);bytes+=data.length;if(bytes>1000000000){failure=new Error("视频过大，请缩短录制时间");return}if(metadata.decoderConfig&&metadata.decoderConfig.description)description=new Uint8Array(metadata.decoderConfig.description).slice();samples.push({bytes:data,key:chunk.type==="key",timestamp:chunk.timestamp})},error:function(error){failure=error}});
 function check(){if(options.cancelled())throw Error("已取消动画导出");if(failure)throw failure}
 try{
@@ -44,5 +44,10 @@ await encoder.flush();check();if(samples.length!==count)throw Error("视频帧�
 for(var j=0;j<count;j++)if(samples[j].timestamp!==Math.round(j*1000000/30))throw Error("编码器帧顺序异常");
 return mux(samples,description,canvas.width,canvas.height);
 }finally{if(encoder.state!=="closed")encoder.close()}
+};
+root.findStandardMp4Support=async function(width,height){
+var baseConfig={codec:"avc1.42001f",width:width,height:height,framerate:30,bitrate:6000000,avc:{format:"avc"},latencyMode:"realtime"},configs=[Object.assign({},baseConfig,{hardwareAcceleration:"prefer-software"}),Object.assign({},baseConfig,{hardwareAcceleration:"prefer-hardware"}),baseConfig],support=null;
+for(var candidate=0;candidate<configs.length;candidate++){support=await VideoEncoder.isConfigSupported(configs[candidate]);if(support.supported)return support}
+return support;
 };
 })(window);
