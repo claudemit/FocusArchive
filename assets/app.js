@@ -58,55 +58,47 @@ function updatePanelHeight(){if(window.innerWidth>1080){document.documentElement
   function exportMessage(message,isError){var status=$("#exportStatus");status.textContent=message||"";status.className=isError?"error":""}
   function openExportDialog(){var dialog=$("#dialog");if(!dialog)return;if(typeof dialog.showModal==="function")dialog.showModal();else{dialog.setAttribute("open","open");dialog.setAttribute("role","dialog");dialog.setAttribute("aria-modal","true")}}
   function closeExportDialog(){if(animationJob){var job=animationJob;animationJob=null;if(job.cancel)job.cancel()}render(false);var dialog=$("#dialog");if(!dialog)return;if(typeof dialog.close==="function")dialog.close();else dialog.removeAttribute("open")}
-function nextSaveName(kind,extension){var n=saveCounts[kind];return(kind==="image"?"focus-archive":"focus-archive-animation")+(n?"-"+n:"")+(kind==="image"?".png":extension||".mp4")}
-function paintImageSave(){var b=$("#saveAlbum");b.classList.toggle("is-saving",imageSaving);b.setAttribute("aria-busy",imageSaving?"true":"false");b.textContent=imageSaving?"正在保存…":"保存图片";b.disabled=imageSaving||(!canSaveToAlbum()&&!canSaveToComputer())}
+function paintImageSave(){var b=$("#saveAlbum");b.classList.toggle("is-saving",imageSaving);b.setAttribute("aria-busy",imageSaving?"true":"false");b.textContent=imageSaving?"正在保存…":"保存图片";b.disabled=imageSaving||!canSaveToAlbum()}
 function canSaveToAlbum(){var nativeBridge=bridge();return!!(nativeBridge&&nativeBridge.writeTempFile&&nativeBridge.saveImageToPhotosAlbum)}
-function canSaveToComputer(){return typeof window.showSaveFilePicker==="function"}
-function probeMp4Support(){var key=canvas.width+"x"+canvas.height;if(key===mp4SupportSize||typeof window.findStandardMp4Support!=="function")return;mp4SupportSize=key;mp4Support=false;window.findStandardMp4Support(canvas.width,canvas.height).then(function(support){if(mp4SupportSize===key){mp4Support=!!(support&&support.supported);updateSaveActions()}}).catch(function(){if(mp4SupportSize===key){mp4Support=false;updateSaveActions()}})}
-function canRecordAnimation(){return!!((window.VideoEncoder&&window.VideoEncoder.isConfigSupported&&window.VideoFrame&&window.encodeStandardMp4)||(window.canEncodeAnimatedWebM&&window.canEncodeAnimatedWebM()))}
+function probeMp4Support(){var frame=exportFrameSize(),key=frame.width+"x"+frame.height;if(key===mp4SupportSize)return;mp4SupportSize=key;mp4Support=false;if(!window.VideoEncoder||!window.VideoEncoder.isConfigSupported||!window.VideoFrame||typeof window.findStandardMp4Support!=="function"){updateSaveActions();return}window.findStandardMp4Support(frame.width,frame.height).then(function(support){if(mp4SupportSize===key){mp4Support=!!(support&&support.supported);updateSaveActions()}}).catch(function(){if(mp4SupportSize===key){mp4Support=false;updateSaveActions()}})}
 function canEncodeAnimatedWebP(){return typeof window.encodeAnimatedWebP==="function"}
-function canPublishAnimation(){var mini=bridge();return!!(mini&&mini.postNote&&mini.writeTempFile&&mp4Support&&window.encodeStandardMp4)}
-function canSaveAnimation(){var mini=bridge();return !animationJob&&!timeline.recording&&timeline.events.length>1&&(mini?canPublishAnimation():canRecordAnimation()&&canSaveToComputer())}
+function canPublishAnimation(){var mini=bridge();return!!(mini&&mini.postNote&&mp4Support&&window.encodeStandardMp4)}
+function canSaveAnimation(){return !animationJob&&!timeline.recording&&timeline.events.length>1&&canPublishAnimation()}
 function animationDataUri(blob){return new Promise(function(resolve,reject){var reader=new FileReader();reader.addEventListener("load",function(){resolve(reader.result)});reader.addEventListener("error",function(){reject(reader.error||new Error("读取动画失败"))});reader.readAsDataURL(blob)})}
 async function publishAnimation(blob,job){
-var nativeBridge=bridge(),stage="转换动画 MP4";
+var nativeBridge=bridge(),stage="准备发布动画";
 function active(){return animationJob===job}
 try{
-var video=await animationDataUri(blob),videoTemp=await nativeBridge.writeTempFile({data:video});if(!active())return;
-stage="准备发布动画";exportMessage(stage+"…",false);var coverTemp=await nativeBridge.writeTempFile({data:exportData});if(!active())return;
-await nativeBridge.postNote({pageType:"video_publish",mediaInfo:{video_resources:{video_url:videoTemp.filePath,cover_url:coverTemp.filePath}}});
+var video=await animationDataUri(blob);if(!active())return;
+exportMessage(stage+"…",false);
+await nativeBridge.postNote({pageType:"video_publish",mediaInfo:{video_resources:{video_url:video,cover_url:exportData}}});
 saveCounts.video++;exportMessage("已打开小红书视频发布页",false);
 }catch(error){if(active())exportMessage(stage+"失败："+String(error&&(error.errMsg||error.message)||error)+(error&&error.errCode!==undefined?"（错误码 "+error.errCode+"）":""),true)}
 }
-function updateSaveActions(){var save=$("#saveAlbum"),video=$("#saveAnimation"),album=canSaveToAlbum(),publish=canPublishAnimation(),computer=canSaveToComputer(),format=mp4Support?"MP4":"WebM";paintImageSave();save.title=album?"保存到手机相册":computer?"保存到本地硬盘":"当前浏览器不支持保存";video.disabled=!canSaveAnimation();video.classList.toggle("is-saving",!!animationJob);video.setAttribute("aria-busy",animationJob?"true":"false");video.textContent=animationJob?"正在发布…":album?"发布动画":"保存动画";video.title=video.disabled?(!timeline.events.length?"请先录制参数变化":album?"当前环境不支持 MP4 动画发布":(canRecordAnimation()?"当前环境无法保存动画":"当前浏览器不支持动画编码")):(publish?"生成 MP4 并打开小红书视频发布页":"生成 "+format+" 并保存到本地硬盘");if(!animationJob&&!imageSaving&&$("#dialog").hasAttribute("open"))exportMessage(album?"图片保存为 PNG；动画将打开视频发布页":computer?"保存到本地硬盘，选择保存位置":"当前预览环境不支持保存图片",false)}
+function animationUnavailableReason(){if(timeline.recording)return"请先结束录制，再发布动画";if(timeline.events.length<2)return"请先录制参数变化，再发布动画";if(!bridge()||!bridge().postNote)return"当前页面没有小红书动画发布能力";if(!window.VideoEncoder||!window.VideoFrame)return"当前手机内核缺少视频编码能力，无法生成 MP4";if(!mp4Support)return"当前手机不支持所需的 H.264 MP4 编码";return""}
+function updateSaveActions(){var save=$("#saveAlbum"),video=$("#saveAnimation"),album=canSaveToAlbum(),reason=animationUnavailableReason();paintImageSave();save.title=album?"保存到手机相册":"请在小红书小工具中保存";video.disabled=!!animationJob;video.classList.toggle("is-saving",!!animationJob);video.setAttribute("aria-busy",animationJob?"true":"false");video.textContent=animationJob?"正在发布…":"发布动画";video.title=reason||"生成 MP4 并打开小红书视频发布页";if(!animationJob&&!imageSaving&&$("#dialog").hasAttribute("open"))exportMessage(reason||"图片保存为 PNG；动画将打开视频发布页",false)}
 async function saveToAlbum(){var nativeBridge=bridge();if(!exportData||!nativeBridge||!nativeBridge.writeTempFile||!nativeBridge.saveImageToPhotosAlbum)return;exportMessage("正在保存到相册…",false);try{var temp=await nativeBridge.writeTempFile({data:exportData});await nativeBridge.saveImageToPhotosAlbum({filePath:temp.filePath});saveCounts.image++;exportMessage("已保存到手机相册",false)}catch(error){exportMessage(error&&error.errMsg?error.errMsg:"保存失败，请检查相册权限",true)}}
-function dataUrlToBlob(dataUrl){var parts=dataUrl.split(","),head=parts[0]||"",payload=parts[1]||"",match=/^data:([^;]+);base64$/.exec(head),binary=atob(payload),bytes=new Uint8Array(binary.length),i;for(i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return new Blob([bytes],{type:match?match[1]:"image/png"})}
-async function saveToComputer(){if(!exportData||!canSaveToComputer())return;try{var handle=await window.showSaveFilePicker({suggestedName:nextSaveName("image"),types:[{description:"PNG 图片",accept:{"image/png":[".png"]}}]}),writable=await handle.createWritable();await writable.write(dataUrlToBlob(exportData));await writable.close();saveCounts.image++;exportMessage("已保存到本地硬盘",false)}catch(error){if(error&&error.name==="AbortError"){exportMessage("已取消保存",false);return}exportMessage("保存失败，请检查浏览器文件权限",true)}}
-async function saveExport(){if(imageSaving||!exportData)return;imageSaving=true;paintImageSave();try{if(canSaveToAlbum())await saveToAlbum();else if(canSaveToComputer())await saveToComputer()}finally{imageSaving=false;paintImageSave()}}
-async function saveAnimationBlob(blob,handle){try{var writable=await handle.createWritable();await writable.write(blob);await writable.close();saveCounts.video++;exportMessage("动画已保存到本地硬盘",false)}catch(error){exportMessage("保存动画失败："+(error&&error.message?error.message:"请检查文件权限"),true)}}
+async function saveExport(){if(imageSaving||!exportData||!canSaveToAlbum())return;imageSaving=true;paintImageSave();try{await saveToAlbum()}finally{imageSaving=false;paintImageSave()}}
 async function exportAnimation(){
-if(!canSaveAnimation())return;
+if(!canSaveAnimation()){var reason=animationUnavailableReason();if(timeline.events.length<2&&!timeline.recording){closeExportDialog();startTimeline();return}exportMessage(reason||"当前无法发布动画",true);return}
 if(timeline.playing)pauseTimeline();
-var events=timeline.events.slice(),duration=timeline.duration,job={cancel:null},handle,cancelled=false,publish=canPublishAnimation(),useWebM=!publish&&!mp4Support&&window.canEncodeAnimatedWebM&&window.canEncodeAnimatedWebM(),extension=useWebM?".webm":".mp4";
+var events=timeline.events.slice(),duration=timeline.duration,job={cancel:null},cancelled=false,publish=canPublishAnimation();
 job.cancel=function(){cancelled=true};
 animationJob=job;updateSaveActions();
 try{
-if(!publish)handle=await window.showSaveFilePicker({suggestedName:nextSaveName("video",extension),types:[useWebM?{description:"WebM 视频",accept:{"video/webm":[".webm"]}}:{description:"MP4 视频",accept:{"video/mp4":[".mp4"]}}]});
-if(animationJob!==job)return;
 var frameSize=exportFrameSize(),w=frameSize.width,h=frameSize.height;
 var out=document.createElement("canvas");out.width=w;out.height=h;var index=0,textScale=w/canvas.width;
-exportMessage(publish?"正在生成发布动画 MP4…":useWebM?"正在生成兼容 WebM…":"正在生成兼容 MP4…",false);
-var encoder=publish?window.encodeStandardMp4:useWebM?window.encodeAnimatedWebM:window.encodeStandardMp4;
-var blob=await encoder({canvas:out,duration:duration,fps:useWebM?30:8,quality:.8,cancelled:function(){return cancelled||animationJob!==job},progress:function(p){exportMessage((publish?"正在生成 MP4：":useWebM?"正在生成 WebM：":"正在生成 MP4：")+Math.round(p*100)+"%",false)},draw:function(time){
+exportMessage("正在生成发布动画 MP4…",false);
+var blob=await window.encodeStandardMp4({canvas:out,duration:duration,fps:30,quality:.8,cancelled:function(){return cancelled||animationJob!==job},progress:function(p){exportMessage("正在生成 MP4："+Math.round(p*100)+"%",false)},draw:function(time){
 while(index<events.length-1&&events[index+1].t<=time)index++;
 var state=Object.assign({},events[index].state);
 state.items=state.items.map(function(item){return Object.assign({},item,{fontPx:item.fontPx*textScale})});
 renderTo(out,state);
 }});
 if(cancelled||animationJob!==job)return;
-if(publish)await publishAnimation(blob,job);else await saveAnimationBlob(blob,handle);
-}catch(error){if(animationJob===job)exportMessage(!album&&error&&error.name==="AbortError"?"已取消保存动画":"生成或保存动画失败："+String(error&&(error.errMsg||error.message)||error),true)}
-finally{if(animationJob===job)animationJob=null;$("#saveAnimation").disabled=!canSaveAnimation();$("#saveAnimation").classList.toggle("is-saving",!!animationJob);$("#saveAnimation").setAttribute("aria-busy",animationJob?"true":"false");$("#saveAnimation").textContent=animationJob?"正在发布…":canSaveToAlbum()?"发布动画":"保存动画";render(false)}
+await publishAnimation(blob,job);
+}catch(error){if(animationJob===job)exportMessage(error&&error.name==="AbortError"?"已取消发布动画":"生成或发布动画失败："+String(error&&(error.errMsg||error.message)||error),true)}
+finally{if(animationJob===job)animationJob=null;$("#saveAnimation").disabled=!canSaveAnimation();$("#saveAnimation").classList.toggle("is-saving",!!animationJob);$("#saveAnimation").setAttribute("aria-busy",animationJob?"true":"false");$("#saveAnimation").textContent=animationJob?"正在发布…":"发布动画";render(false)}
 }
   document.querySelectorAll("[data-mobile-tool]").forEach(function(button){button.addEventListener("click",function(){document.body.setAttribute("data-tool",button.getAttribute("data-mobile-tool"));document.querySelectorAll("[data-mobile-tool]").forEach(function(item){item.classList.remove("on")});button.classList.add("on");requestAnimationFrame(function(){updatePanelHeight();size()})})});
   $("#import").addEventListener("click",function(){$("#file").click()});$("#file").addEventListener("change",function(){var f=this.files&&this.files[0];if(!f)return;if(!/image\/(jpeg|png|webp)/.test(f.type)||f.size>25*1024*1024){alert("请选择 25MB 以内的 JPG、PNG 或 WebP 图片");this.value="";return}if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(f);load(objectUrl);this.value=""});$("#export").addEventListener("click",function(){if(timeline.playing)pauseTimeline();var size=exportFrameSize(),out=document.createElement("canvas");out.width=size.width;out.height=size.height;renderTo(out,snapshot());exportData=out.toDataURL("image/png");$("#result").src=exportData;openExportDialog();updateSaveActions();schedule()});$("#saveAlbum").addEventListener("click",saveExport);$("#saveAnimation").addEventListener("click",exportAnimation);$("#close").addEventListener("click",closeExportDialog);$("#recordStart").addEventListener("click",startTimeline);$("#recordStop").addEventListener("click",stopTimeline);$("#recordPlay").addEventListener("click",function(){if(timeline.playing)pauseTimeline();else playTimeline()});$("#timeline").addEventListener("input",function(){var target=+this.value;if(timeline.playing)pauseTimeline();timeline.playOffset=target;this.value=target;var event=timeline.events[0];for(var i=1;i<timeline.events.length&&timeline.events[i].t<=target;i++)event=timeline.events[i];if(event)restoreSnapshot(event.state,true);updateTimeline()});$("#reset").addEventListener("click",function(){location.reload()});window.addEventListener("resize",function(){setAppHeight();updatePanelHeight();size()});if(window.visualViewport)window.visualViewport.addEventListener("resize",function(){setAppHeight();updatePanelHeight();size()});document.querySelectorAll("main>aside").forEach(function(panel){["pointerdown","input","change","click"].forEach(function(type){panel.addEventListener(type,function(){if(timeline.playing)pauseTimeline()},true)})});

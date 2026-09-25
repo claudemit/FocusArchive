@@ -7,7 +7,7 @@ function join(a){var n=a.reduce(function(n,b){return n+b.length},0),out=new Uint
 function box(type,parts){var body=join(parts);return join([u32([body.length+8]),ascii(type),body])}
 var matrix=u32([65536,0,0,0,65536,0,0,0,1073741824]);
 function mux(samples,description,w,h){
-if(!samples.length||!description||description[1]!==66||description[3]>31)throw Error("编码器未生成兼容的 H.264 Baseline 视频");
+if(!samples.length||!description||description[1]!==66||description[3]>52)throw Error("编码器未生成兼容的 H.264 Baseline 视频");
 var count=samples.length,duration=count*3000,total=samples.reduce(function(n,s){return n+s.bytes.length},0);
 if(total>1000000000)throw Error("视频过大，请缩短录制时间");
 var ftyp=box("ftyp",[ascii("isom"),u32([512]),ascii("isomiso2avc1mp41")]);
@@ -46,8 +46,14 @@ return mux(samples,description,canvas.width,canvas.height);
 }finally{if(encoder.state!=="closed")encoder.close()}
 };
 root.findStandardMp4Support=async function(width,height){
-var baseConfig={codec:"avc1.42001f",width:width,height:height,framerate:30,bitrate:6000000,avc:{format:"avc"},latencyMode:"realtime"},configs=[Object.assign({},baseConfig,{hardwareAcceleration:"prefer-software"}),Object.assign({},baseConfig,{hardwareAcceleration:"prefer-hardware"}),baseConfig],support=null;
-for(var candidate=0;candidate<configs.length;candidate++){support=await VideoEncoder.isConfigSupported(configs[candidate]);if(support.supported)return support}
+var macroblocks=Math.ceil(width/16)*Math.ceil(height/16),perSecond=macroblocks*30;
+var levels=[[31,3600,108000],[32,5120,216000],[40,8192,245760],[41,8192,245760],[42,8704,522240],[50,22080,589824],[51,36864,983040],[52,36864,2073600]];
+var level=null;
+for(var i=0;i<levels.length;i++)if(macroblocks<=levels[i][1]&&perSecond<=levels[i][2]){level=levels[i][0];break}
+if(level===null)throw Error("图片尺寸超出 H.264 视频编码范围");
+var codec="avc1.4200"+("0"+level.toString(16)).slice(-2);
+var baseConfig={codec:codec,width:width,height:height,framerate:30,bitrate:6000000,avc:{format:"avc"},latencyMode:"realtime"},configs=[Object.assign({},baseConfig,{hardwareAcceleration:"prefer-software"}),Object.assign({},baseConfig,{hardwareAcceleration:"prefer-hardware"}),baseConfig],support=null;
+for(var candidate=0;candidate<configs.length;candidate++){try{support=await VideoEncoder.isConfigSupported(configs[candidate]);if(support.supported)return support}catch(error){support=null}}
 return support;
 };
 })(window);
