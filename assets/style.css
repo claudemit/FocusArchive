@@ -132,6 +132,9 @@ dialog #close{display:block;margin:0 0 var(--space-sm) auto}
   .color-group{flex:1;min-width:0}
   .color-group+.color-group{margin:0 0 0 var(--space-md)}
   .color-group .parameter-grid label{grid-template-columns:3em minmax(0,1fr);font-size:var(--ui-text)}
+  body[data-tool=color] main>aside.right section{padding-top:6px;padding-bottom:6px}
+  body[data-tool=color] .color-group h3{margin-bottom:4px}
+  .color-group .parameter-grid label input{height:40px}
   .color-reset{margin-top:calc(-1 * var(--control-size))}
   .tool-dock{flex:0 0 auto;display:flex;border-top:var(--border-width) solid var(--line);padding-bottom:var(--safe-area-inset-bottom,0px)}
   .tool-dock button{flex:1;min-width:0;border:0;background:var(--surface)}
@@ -180,6 +183,7 @@ dialog #close{display:block;margin:0 0 var(--space-sm) auto}
   .color-group .parameter-grid label{
     grid-template-columns:var(--mobile-color-label) minmax(0,1fr) var(--mobile-color-tail-space);
   }
+  .color-group .parameter-grid label input{height:40px}
 }
 @supports(padding:env(safe-area-inset-bottom)){
   @media(max-width:1080px){
