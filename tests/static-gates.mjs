@@ -70,7 +70,7 @@ for (const file of files) {
       [/\blocation\.(?:href\s*=|assign\s*\()/, 'location navigation is forbidden'], [/\?\.(?!\d)|\?\?|&&=|\|\|=|\?\?=|\bfor\s+await\b/, 'syntax newer than the ES2017 delivery baseline is referenced'],
     ];
     for (const [pattern, label] of banned) check(pattern, content, label, relative);
-    if (relative !== 'assets/platform/xhs-minitool.js' && /\b(?:window\.)?xhs\.miniTool\b/.test(content)) errors.push(`${relative}: direct miniTool Bridge access must stay behind the platform adapter`);
+    if (relative !== 'critical/platform/xhs-minitool.js' && /\b(?:window\.)?xhs\.miniTool\b/.test(content)) errors.push(`${relative}: direct miniTool Bridge access must stay behind the platform adapter`);
   }
 }
 for (const warning of warnings) process.stderr.write(`WARN ${warning}\n`);

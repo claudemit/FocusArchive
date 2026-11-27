@@ -34,7 +34,12 @@ function Write-Utf8Json {
 
 function Get-ArtifactSha256 {
     param([Parameter(Mandatory = $true)][string]$Path)
-    return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $stream = [System.IO.File]::OpenRead($Path)
+        try { return [System.BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-', '').ToLowerInvariant() }
+        finally { $stream.Dispose() }
+    } finally { $sha.Dispose() }
 }
 
 function Get-DeployConfig {

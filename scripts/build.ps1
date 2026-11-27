@@ -10,17 +10,30 @@ $projectRoot = Get-ProjectRoot
 $distDir = Assert-PathInsideProject -Path (Join-Path $projectRoot 'dist') -ProjectRoot $projectRoot
 $artifactDir = Assert-PathInsideProject -Path (Join-Path $projectRoot 'artifacts') -ProjectRoot $projectRoot
 $stateDir = Assert-PathInsideProject -Path (Join-Path $projectRoot '.focus') -ProjectRoot $projectRoot
-$deliveryEntries = @('index.html', 'assets')
+$criticalEntries = @('style.css', 'icon.png', 'Mirror.svg', 'Reset.svg', 'platform/xhs-minitool.js', 'mp4-standard.js', 'app.js', 'ui-controls.js')
+$deliveryEntries = @('index.html', 'assets/demo.png') + @($criticalEntries | ForEach-Object { "assets/$_" })
 
 foreach ($entry in $deliveryEntries) {
     if (-not (Test-Path -LiteralPath (Join-Path $projectRoot $entry))) { throw "Delivery source is missing: $entry" }
 }
 
-if (Test-Path -LiteralPath $distDir) { Remove-Item -LiteralPath $distDir -Recurse -Force }
-New-Item -ItemType Directory -Force -Path $distDir, $artifactDir, $stateDir | Out-Null
-foreach ($entry in $deliveryEntries) {
-    Copy-Item -LiteralPath (Join-Path $projectRoot $entry) -Destination $distDir -Recurse -Force
+if (Test-Path -LiteralPath $distDir) {
+    $distItem = Get-Item -LiteralPath $distDir -Force
+    if (($distItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -or
+        (Get-ChildItem -LiteralPath $distDir -Force -Recurse -Attributes ReparsePoint)) {
+        throw "Refusing to clean a distribution directory containing a linked path: $distDir"
+    }
+    Remove-Item -LiteralPath $distDir -Recurse -Force
 }
+$criticalDir = Join-Path $distDir 'critical'
+New-Item -ItemType Directory -Force -Path (Join-Path $distDir 'assets'), (Join-Path $criticalDir 'platform'), $artifactDir, $stateDir | Out-Null
+foreach ($entry in $criticalEntries) {
+    Copy-Item -LiteralPath (Join-Path $projectRoot "assets/$entry") -Destination (Join-Path $criticalDir $entry)
+}
+Copy-Item -LiteralPath (Join-Path $projectRoot 'assets/demo.png') -Destination (Join-Path $distDir 'assets/demo.png')
+$entryHtml = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $projectRoot 'index.html')
+foreach ($entry in $criticalEntries) { $entryHtml = $entryHtml.Replace("./assets/$entry", "./critical/$entry") }
+[System.IO.File]::WriteAllText((Join-Path $distDir 'index.html'), $entryHtml, [System.Text.UTF8Encoding]::new($false))
 
 $package = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $projectRoot 'package.json') | ConvertFrom-Json
 $gitShort = 'nogit'
@@ -37,7 +50,7 @@ $now = [DateTime]::UtcNow
 $releaseId = '{0}-{1}' -f $now.ToString('yyyyMMddTHHmmssfffZ'), $gitShort
 $fingerprintLines = @(Get-ChildItem -File -Recurse -LiteralPath $distDir | Sort-Object FullName | ForEach-Object {
     $relative = $_.FullName.Substring($distDir.Length).TrimStart('\').Replace('\', '/')
-    "$relative=$((Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant())"
+    "$relative=$(Get-ArtifactSha256 -Path $_.FullName)"
 })
 $fingerprintInput = [System.Text.Encoding]::UTF8.GetBytes(($fingerprintLines -join "`n"))
 $hasher = [System.Security.Cryptography.SHA256]::Create()

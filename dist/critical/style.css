@@ -7,11 +7,30 @@
   --radius-control:0; --radius-round:50%; --control-size:44px; --icon-size:24px;
   --title-size:20px; --border-width:1px; --focus-width:2px;
   --track-size:4px; --thumb-size:14px; --header-size:64px;
+  --host-top-minimum:0px; --host-navigation-height:0px;
   --mobile-design-top-space:5px; --mobile-design-bottom-space:10px;
   --mobile-brand-row:33px; --mobile-command-row:42px; --mobile-tool-row:40px;
   --mobile-slider-label:38px; --mobile-slider-column-gap:19px;
   --mobile-slider-command-space:47px; --mobile-color-label:37px;
   --mobile-color-command-reserve:28px; --mobile-color-tail-space:11px;
+}
+@media(max-width:1080px) and (pointer:coarse){
+  /* Leave room for the native status and navigation rows over the WebView. */
+  html.mini-tool-host{--host-top-minimum:80px;--host-navigation-height:44px;--host-navigation-side-space:88px}
+  html.mini-tool-host header{position:relative}
+  html.mini-tool-host .header-brand{
+    position:absolute;
+    bottom:calc(var(--mobile-command-row) + var(--mobile-design-top-space));
+    left:50%;
+    transform:translateX(-50%);
+    height:var(--host-navigation-height);
+    max-width:calc(100% - var(--host-navigation-side-space) - var(--host-navigation-side-space));
+    overflow:hidden;
+    pointer-events:none;
+  }
+  html.mini-tool-window-measured header::before{height:var(--host-top-minimum)}
+  html.mini-tool-host .header-brand .mark{width:28px;height:28px}
+  html.mini-tool-host .header-brand .brand b{display:block;font-size:18px;overflow:hidden;text-overflow:ellipsis}
 }
 *{box-sizing:border-box}
 html{touch-action:manipulation}
@@ -29,8 +48,10 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--i
 button.on{color:var(--accent);box-shadow:inset 0 calc(-1 * var(--focus-width)) 0 var(--accent)}
 @media(hover:hover){button:not(:disabled):hover{border-color:var(--paper)}}
 header{height:var(--header-size);display:flex;align-items:center;padding:0 var(--space-lg);border-bottom:var(--border-width) solid var(--line);background:var(--surface)}
-.mark{width:var(--control-size);height:var(--control-size);padding:var(--space-xs);margin-right:var(--space-sm)}
+.header-brand{display:flex;align-items:center;min-width:0}
+.mark{flex-shrink:0;width:var(--control-size);height:var(--control-size);padding:var(--space-xs);margin-right:var(--space-sm)}
 .mark img{display:block;width:100%;height:100%;object-fit:contain}
+.brand{min-width:0}
 .brand b{font-size:var(--title-size);font-weight:400;white-space:nowrap}
 .brand small{display:block;font-size:var(--ui-meta);color:var(--muted);margin-top:var(--space-xs)}
 .spacer{flex:1}
@@ -39,7 +60,7 @@ header{height:var(--header-size);display:flex;align-items:center;padding:0 var(-
 .command-bar>*+*{margin-left:var(--space-sm)}
 .record-actions{display:flex}
 .record-actions button{width:100%;color:var(--accent)}
-#recordStart:disabled,#recordStop:disabled{display:none}
+#recordStart[hidden],#recordStop[hidden]{display:none}
 .icon-button{flex:0 0 var(--control-size);width:var(--control-size);height:var(--control-size);padding:var(--space-sm);border-color:transparent;background:transparent}
 .icon-button:before{content:"";display:block;width:var(--icon-size);height:var(--icon-size);margin:auto;background-position:center;background-size:contain;background-repeat:no-repeat;filter:invert(1)}
 .reset-icon:before{background-image:url("./Reset.svg")}
@@ -55,6 +76,8 @@ aside section{padding:var(--space-md);border-bottom:var(--border-width) solid va
 .timeline-control{display:flex;align-items:center;flex:1;min-width:0;margin:0}
 .timeline-control input{flex:1;min-width:0;margin:0 var(--space-sm)}
 .board-wrap{flex:1;min-height:0;min-width:0;display:flex;align-items:center;justify-content:center;padding:var(--space-md) var(--space-lg)}
+.board-notice{max-width:28em;margin:0;color:var(--paper);font-size:var(--ui-text);line-height:1.5;text-align:center}
+.board-notice:not([hidden])+#board{display:none}
 #board{position:relative;max-height:100%;max-width:100%;background:var(--control-surface)}
 canvas,#overlay{position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%}
 #overlay{touch-action:none}
@@ -109,7 +132,13 @@ dialog #close{display:block;margin:0 0 var(--space-sm) auto}
 @media(max-width:1080px){
   html,body{height:var(--app-height)}
   body{display:flex;flex-direction:column;padding:0}
-  header{height:auto;flex:0 0 auto;flex-wrap:wrap;justify-content:center;padding:var(--space-sm) 0 0;padding-top:calc(var(--space-sm) + var(--safe-area-inset-top,0px))}
+  header{height:auto;flex:0 0 auto;flex-wrap:wrap;justify-content:center;align-content:flex-start;padding:var(--mobile-design-top-space) 0 0}
+  header::before{
+    content:"";
+    flex:0 0 100%;
+    min-height:var(--host-top-minimum);
+    height:calc(var(--safe-area-inset-top,0px) + var(--host-navigation-height));
+  }
   header .mark{margin-right:var(--space-xs)}
   header .brand small,header .spacer,header>#reset{display:none}
   .command-bar{flex:0 0 100%;width:100%;margin:var(--space-sm) 0 0}
@@ -120,7 +149,7 @@ dialog #close{display:block;margin:0 0 var(--space-sm) auto}
   main{height:auto;flex:1;flex-direction:column;overflow:hidden}
   .stage{order:-1;flex:1 1 0px;min-height:96px}
   .board-wrap{padding:var(--space-sm) var(--space-lg)}
-  main>aside,main>aside.right{display:none;flex:0 0 auto;max-height:52%;min-height:0;border:0}
+  main>aside,main>aside.right{display:none;flex:0 1 auto;max-height:52%;min-height:0;border:0}
   main>aside section{display:none;padding:var(--space-sm) var(--space-md);border:0}
   body[data-tool=edit] main>aside:first-of-type,body[data-tool=text] main>aside:first-of-type,body[data-tool=color] main>aside.right{display:block}
   body[data-tool=edit] main>aside:first-of-type section:first-child,body[data-tool=text] .typography-panel,body[data-tool=color] main>aside.right section{display:block}
@@ -142,11 +171,6 @@ dialog #close{display:block;margin:0 0 var(--space-sm) auto}
   .tool-dock button.on{color:var(--accent)}
 }
 @media(max-width:1080px){
-  header{
-    height:calc(var(--mobile-design-top-space) + var(--mobile-brand-row) + var(--mobile-command-row) + var(--safe-area-inset-top,0px));
-    align-content:flex-start;
-    padding:calc(var(--mobile-design-top-space) + var(--safe-area-inset-top,0px)) 0 0;
-  }
   header .mark{
     width:var(--mobile-brand-row);
     height:var(--mobile-brand-row);
@@ -185,12 +209,15 @@ dialog #close{display:block;margin:0 0 var(--space-sm) auto}
   }
   .color-group .parameter-grid label input{height:40px}
 }
+@supports(padding:env(safe-area-inset-top)){
+  @media(max-width:1080px){
+    header::before{
+      height:calc(var(--safe-area-inset-top,env(safe-area-inset-top,0px)) + var(--host-navigation-height));
+    }
+  }
+}
 @supports(padding:env(safe-area-inset-bottom)){
   @media(max-width:1080px){
-    header{
-      height:calc(var(--mobile-design-top-space) + var(--mobile-brand-row) + var(--mobile-command-row) + var(--safe-area-inset-top,env(safe-area-inset-top,0px)));
-      padding-top:calc(var(--mobile-design-top-space) + var(--safe-area-inset-top,env(safe-area-inset-top,0px)));
-    }
     .tool-dock{padding-bottom:calc(var(--mobile-design-bottom-space) + var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)))}
   }
 }

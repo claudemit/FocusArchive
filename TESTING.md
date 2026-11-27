@@ -14,10 +14,10 @@
 
 运行 `npm run deploy:test`。默认 manual adapter 仅生成 ZIP、SHA-256、部署记录和手机测试单；它不会上传、生成二维码或伪造真机结论。通过小红书体验版入口完成测试，并只编辑生成的 `mobile-test-report.json` 结果字段。
 
-必须记录 Bridge 注入、首次/拒绝/再次授权的相册权限、大图内存和耗时、安全区、软键盘、后台恢复，以及 PNG 和动画 WebP 在系统相册中的真实打开与播放情况。
+必须记录 Bridge 注入、首次/拒绝/再次授权的相册权限、大图内存和耗时、安全区、软键盘、后台恢复，以及 PNG 在相册中的打开情况和 MP4 在视频发布页的播放情况。
 
 ## 发布与回流
 
 `deployments/test/<releaseId>/` 保存不可变 `artifact.zip`、hash、adapter 结果、`MOBILE_TEST.md` 与手机报告。整体报告只有在所有 `requiredForProd` 用例为 `PASS` 且 `criticalDefects` 为空时才可填写 `PASS`。
 
-视频和动画的容器能力必须按真实 MiniTool Bridge 验证。当前交付路径是动画 WebP；不要把 MP4 交给图片相册 API，也不要把小程序 API 当成小工具 H5 的能力证明。
+动画使用 H.264 MP4。先验证编码，再核对 `writeTempFile` 返回的视频和封面路径能否通过 `postNote` 打开视频发布页。缺少 WebCodecs 的设备应显示明确提示，仍可录制、回放和保存 PNG。

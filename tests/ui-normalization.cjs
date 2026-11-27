@@ -28,12 +28,12 @@ const path = require('node:path');
           dock:await rect('.tool-dock'),
           dockButton:await rect('.tool-dock button:first-child')
         },{
-          brand:{top:52,height:26,bottom:78},
-          command:{top:81,height:42,bottom:123},
-          timeline:{top:123,height:44,bottom:167},
-          dock:{top:719,height:74,bottom:793},
-          dockButton:{top:720,height:40,bottom:760}
-        },'360x793 mobile safe-area geometry must match the approved design baseline');
+          brand:{top:9,height:26,bottom:35},
+          command:{top:38,height:42,bottom:80},
+          timeline:{top:81,height:44,bottom:125},
+          dock:{top:742,height:51,bottom:793},
+          dockButton:{top:743,height:40,bottom:783}
+        },'360x793 mobile safe-area geometry must match the current layout without system insets');
       }
       for (const tool of ['edit','text','color']) {
         if (viewport.width <= 1080) await page.locator('[data-mobile-tool="'+tool+'"]').click();
@@ -65,6 +65,54 @@ const path = require('node:path');
       assert.equal(await page.locator('#dialog').isVisible(),false);
       await page.close();
       console.log('PASS '+viewport.width+'x'+viewport.height+' panels, bounds, selection, mirror/reset, recording, export preview');
+    }
+    for (const delayed of [false, true]) {
+      const viewport = {width:delayed ? 320 : 360,height:delayed ? 360 : 793};
+      const page = await browser.newPage({viewport,isMobile:true,hasTouch:true});
+      page.on('pageerror', e => errors.push(e.message));
+      if (!delayed) {
+        await page.addInitScript(() => {
+          window.xhs = {miniTool:{}};
+          document.addEventListener('DOMContentLoaded', () => {
+            document.documentElement.style.setProperty('--safe-area-inset-top','59px');
+          });
+        });
+      }
+      await page.goto('http://127.0.0.1:4173/');
+      await page.waitForFunction(() => document.querySelector('canvas').width > 300);
+      if (delayed) {
+        assert.equal(await page.locator('html.mini-tool-host').count(),0);
+        await page.evaluate(() => { window.xhs = {miniTool:{}}; });
+        await page.waitForSelector('html.mini-tool-host');
+      }
+      const layout = await page.evaluate(() => {
+        const rect = selector => document.querySelector(selector).getBoundingClientRect();
+        const board = rect('#board');
+        const canvas = document.querySelector('#canvas');
+        const brand = rect('.header-brand');
+        const title = document.querySelector('.brand b');
+        return {
+          brandTop:brand.top,
+          brandBottom:brand.bottom,
+          brandCenter:(brand.left + brand.right) / 2,
+          titleFits:title.scrollWidth <= title.clientWidth,
+          commandTop:rect('.command-bar').top,
+          commandBottom:rect('.command-bar').bottom,
+          timelineTop:rect('.stage-head').top,
+          panelBottom:rect('main>aside').bottom,
+          dockTop:rect('.tool-dock').top,
+          boardFits:board.height > 0 && Math.abs(board.width / board.height - canvas.width / canvas.height) < .003
+        };
+      });
+      assert.equal(layout.brandTop,delayed ? 36 : 59);
+      assert.equal(layout.brandBottom,delayed ? 80 : 103);
+      assert.ok(Math.abs(layout.brandCenter - viewport.width / 2) < .1);
+      assert.ok(layout.titleFits);
+      assert.equal(layout.commandTop,layout.brandBottom + 5);
+      assert.ok(layout.commandBottom <= layout.timelineTop);
+      assert.ok(layout.panelBottom <= layout.dockTop);
+      assert.ok(layout.boardFits);
+      await page.close();
     }
     assert.deepEqual(errors,[]);
   } finally { await browser.close(); }

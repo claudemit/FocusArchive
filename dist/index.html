@@ -4,18 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Focus Archive</title>
-  <link rel="stylesheet" href="./assets/style.css">
+  <link rel="stylesheet" href="./critical/style.css">
 </head>
 <body data-tool="edit">
   <header>
-    <div class="mark"><img src="./assets/icon.png" alt="Focus Archive"></div>
-    <div class="brand"><b>FOCUS 字画</b><small>FOCUS ARCHIVE</small></div>
+    <div class="header-brand">
+      <div class="mark"><img src="./critical/icon.png" alt="Focus Archive"></div>
+      <div class="brand"><b>FOCUS 字画</b><small>FOCUS ARCHIVE</small></div>
+    </div>
     <div class="spacer"></div>
     <button id="reset" class="icon-button reset-icon" type="button" aria-label="重置项目" title="重置项目"></button>
     <div class="command-bar">
-      <button class="header-command" id="import" type="button">导入</button>
-      <div class="record-actions"><button id="recordStart" type="button">● 录制</button><button id="recordStop" type="button" disabled>■ 结束</button></div>
-      <button class="header-command primary" id="export" type="button">导出</button>
+      <button class="header-command" id="import" type="button" disabled>导入</button>
+      <div class="record-actions"><button id="recordStart" type="button" disabled>● 录制</button><button id="recordStop" type="button" hidden disabled>■ 结束</button></div>
+      <button class="header-command primary" id="export" type="button" disabled>导出</button>
     </div>
     <input id="file" type="file" accept="image/jpeg,image/png,image/webp" hidden>
   </header>
@@ -62,6 +64,7 @@
         <label class="timeline-control"><span class="sr-only">参数时间轴</span><input id="timeline" type="range" min="0" max="1" value="0" disabled><output id="timelineOut" hidden>00:00</output></label>
       </div>
       <div class="board-wrap">
+        <p id="startup-status" class="board-notice" role="status">正在加载示例图。若长时间未就绪，请退出后重新打开。</p>
         <div id="board">
           <canvas id="canvas"></canvas>
           <svg id="overlay"></svg>
@@ -72,6 +75,7 @@
 
     <aside class="right">
       <section>
+        <p id="filter-status" class="board-notice" role="status" hidden>当前内核不支持画布滤镜，其余编辑功能仍可使用。</p>
         <div class="color-groups">
           <div class="color-group">
             <h3>背景图片</h3>
@@ -103,10 +107,9 @@
     <div class="export-actions"><button id="saveAlbum" type="button">保存图片</button><button id="saveAnimation" type="button">发布动画</button></div>
     <p id="exportStatus" role="status" aria-live="polite"></p>
   </dialog>
-  <script src="./assets/platform/xhs-minitool.js"></script>
-  <script src="./assets/webp-animation.js"></script>
-  <script src="./assets/mp4-standard.js"></script>
-  <script src="./assets/app.js"></script>
-  <script src="./assets/ui-controls.js"></script>
+  <script defer src="./critical/platform/xhs-minitool.js"></script>
+  <script defer src="./critical/mp4-standard.js"></script>
+  <script defer src="./critical/app.js"></script>
+  <script defer src="./critical/ui-controls.js"></script>
 </body>
 </html>
